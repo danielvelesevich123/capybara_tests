@@ -1,36 +1,13 @@
-require 'selenium-webdriver'
-require 'capybara'
 require 'csv'
+require_relative 'lib/page_with_news'
+require_relative 'lib/writer'
 
-Capybara.register_driver :selenium do |app|
-  Capybara::Selenium::Driver.new(app, browser: :firefox)
-end
-Capybara.default_max_wait_time = 5
-Capybara.default_driver = :selenium
-Capybara.javascript_driver = :firefox
-
-browser = Capybara.current_session
-url = 'https://onliner.by'
-browser.visit url
-link = browser.all('h2 a')
-link.first.click
+page = PageWithNews.set_page('https://people.onliner.by')
 
 result = []
-images = []
-descriptions = []
-titles = []
-
-browser.all('div', class: 'news-tidings__speech').each do |el|
-  descriptions.push(el.text[0..200])
-end
-
-browser.all('span', class: 'news-helpers_hide_mobile-small').each do |el|
-  titles.push(el.text)
-end
-
-browser.all('div', class: 'news-tidings__image').each do |el|
-  images.push(el['style'])
-end
+images = PageWithNews.find_info_in_atribute(page, 'div', 'news-tidings__image', 'style')
+descriptions = PageWithNews.find_info_in_tag(page, 'div', 'news-tidings__speech')
+titles = PageWithNews.find_info_in_tag(page, 'span', 'news-helpers_hide_mobile-small')
 
 images.length.times do |i|
   result[i] =
@@ -42,8 +19,4 @@ images.length.times do |i|
 end
 
 file = 'data.csv'
-File.open(file, 'w') do |csv|
-  result.each do |item|
-    csv << "\n#{item[:image]}\n#{item[:title]}\n#{item[:description]}\n\n"
-  end
-end
+Writer.write_into_file(file, result)
