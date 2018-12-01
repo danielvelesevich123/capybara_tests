@@ -1,4 +1,3 @@
-require 'csv'
 require_relative 'lib/page_with_news'
 require_relative 'lib/writer'
 
